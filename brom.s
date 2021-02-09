@@ -12,7 +12,7 @@ ffff0020:	ea000013 	b	fel_setup     ; FEL
 unimplemented:
 ffff0024:	eafffffe 	b	unimplemented ; loop forever
 
-	;;  Entry point, clear all registers and jump to BROM
+	;;  Entry point, clear all registers (except r0) and jump to BROM
 reset:
 ffff0028:	e3a00001 	mov	r0, #1
 ffff002c:	e3a01000 	mov	r1, #0
@@ -105,9 +105,9 @@ ffff0164:	eb00085f 	bl	0xffff22e8
 
 	;; Global Offset Table
 ffff0168:	ffff2c00
-ffff016c:	00002000 	andeq	r2, r0, r0
-ffff0170:	00007000 	andeq	r7, r0, r0
-ffff0174:	01c20000 	biceq	r0, r2, r0 	; CCU_BASE
+ffff016c:	00002000
+ffff0170:	00007000
+ffff0174:	01c20000			 	; CCU_BASE
 
 ffff0178:	e12fff1e 	bx	lr
 
@@ -3013,17 +3013,17 @@ ffff2c1c:	00000000	.word	0
 	;; This seems to generate a HI/LO/HI/LO/HI sequence on this pin...
 	;; ... Except that it is an unknown pin on the V3s
 start:
-ffff2c20:	e59f11bc 	ldr	r1, [pc, #444]	; 0xffff2de4 =0x01c000a4
+ffff2c20:	e59f11bc 	ldr	r1, [pc, #444]	; 0xffff2de4 =0x01c000a4 BROM_OUTPUT_REG
 ffff2c24:	e5912000 	ldr	r2, [r1]
 ffff2c28:	e3a03001 	mov	r3, #1
 ffff2c2c:	e1822003 	orr	r2, r2, r3
-ffff2c30:	e5812000 	str	r2, [r1] 	; set bit 0 of undocumented register
+ffff2c30:	e5812000 	str	r2, [r1] 	; set bit 0 BROM_OUTPUT_ENABLE
 
-ffff2c34:	e59f11a8 	ldr	r1, [pc, #424]	; 0xffff2de4 =0x01c000a4
+ffff2c34:	e59f11a8 	ldr	r1, [pc, #424]	; 0xffff2de4 =0x01c000a4 BROM_OUTPUT_REG
 ffff2c38:	e5912000 	ldr	r2, [r1]
 ffff2c3c:	e3a03002 	mov	r3, #2
 ffff2c40:	e1822003 	orr	r2, r2, r3
-ffff2c44:	e5812000 	str	r2, [r1]	; set bit 1 of undocumented register
+ffff2c44:	e5812000 	str	r2, [r1]	; set bit 1 BROM_OUTPUT_VALUE
 
 ffff2c48:	e3a00014 	mov	r0, #20		; delay loop 20 times
 
@@ -3033,7 +3033,7 @@ ffff2c50:	1afffffd 	bne	.delay0
 
 ffff2c54:	e5912000 	ldr	r2, [r1]
 ffff2c58:	e1c22003 	bic	r2, r2, r3
-ffff2c5c:	e5812000 	str	r2, [r1]	; clear bit 1 of undocumented register
+ffff2c5c:	e5812000 	str	r2, [r1]	; clear bit 1 BROM_OUTPUT_VALUE
 
 ffff2c60:	e3a0001e 	mov	r0, #30		; delay loop 30 times
 
@@ -3043,7 +3043,7 @@ ffff2c68:	1afffffd 	bne	.delay1
 
 ffff2c6c:	e5912000 	ldr	r2, [r1]
 ffff2c70:	e1822003 	orr	r2, r2, r3
-ffff2c74:	e5812000 	str	r2, [r1]	; set bit 1 of undocumented register
+ffff2c74:	e5812000 	str	r2, [r1]	; set bit 1 BROM_OUTPUT_VALUE
 
 ffff2c78:	e3a00014 	mov	r0, #20 	; delay loop 20 times
 
@@ -3053,7 +3053,7 @@ ffff2c80:	1afffffd 	bne	.delay2
 
 ffff2c84:	e5912000 	ldr	r2, [r1]
 ffff2c88:	e1c22003 	bic	r2, r2, r3
-ffff2c8c:	e5812000 	str	r2, [r1]	; clear bit 1 of undocumented register
+ffff2c8c:	e5812000 	str	r2, [r1]	; clear bit 1 BROM_OUTPUT_VALUE
 
 ffff2c90:	e3a0001e 	mov	r0, #30		; delay loop 30 times
 
@@ -3063,7 +3063,7 @@ ffff2c98:	1afffffd 	bne	.delay3
 
 ffff2c9c:	e5912000 	ldr	r2, [r1]
 ffff2ca0:	e1822003 	orr	r2, r2, r3
-ffff2ca4:	e5812000 	str	r2, [r1]	; set bit 1 of undocumented register
+ffff2ca4:	e5812000 	str	r2, [r1]	; set bit 1 BROM_OUTPUT_VALUE
 
 ffff2ca8:	e3a00014 	mov	r0, #20		; delay loop 20 times
 
@@ -3071,11 +3071,11 @@ ffff2ca8:	e3a00014 	mov	r0, #20		; delay loop 20 times
 ffff2cac:	e2500001 	subs	r0, r0, #1
 ffff2cb0:	1afffffd 	bne	.delay4
 
-ffff2cb4:	e59f1128 	ldr	r1, [pc, #296]	; 0xffff2de4 =0x01c000a4
+ffff2cb4:	e59f1128 	ldr	r1, [pc, #296]	; 0xffff2de4 =0x01c000a4 BROM_OUTPUT_REG
 ffff2cb8:	e5912000 	ldr	r2, [r1]
 ffff2cbc:	e3a03001 	mov	r3, #1
 ffff2cc0:	e1c22003 	bic	r2, r2, r3
-ffff2cc4:	e5812000 	str	r2, [r1]	; clear bit 0 of undocumented register
+ffff2cc4:	e5812000 	str	r2, [r1]	; clear bit 0 BROM_OUTPUT_ENABLE
 
 ffff2cc8:	e3a00050 	mov	r0, #80		; delay loop 80 times
 
@@ -3087,7 +3087,7 @@ ffff2cd4:	ea000001 	b	.check_multi_cpu
 
 	;; Start a CPU other than #0, which is unlikely as the V3s only features a single core
 .start_other_cpu:
-ffff2cd8:	e59f0108 	ldr	r0, [pc, #264]	; 0xffff2de8 =0x01f01da4 (PRIVATE0) cpu0+ (or cpu0 hotplug) entry address register?
+ffff2cd8:	e59f0108 	ldr	r0, [pc, #264]	; 0xffff2de8 =0x01f01da4 cpu0+ (or cpu0 hotplug) entry address register?
 ffff2cdc:	e590f000 	ldr	pc, [r0]
 
 	;; Check for multi-CPU, which is unlikely as the V3s only features a single core
@@ -3100,30 +3100,30 @@ ffff2cec:	1afffff9 	bne	.start_other_cpu; start non-zero CPU
 ffff2cf0:	eaffffff 	b	.start_cpu0	; start CPU 0
 
 	;; Start CPU #0
-.start_cpu:
+.start_cpu0:
 ffff2cf4:	e10f0000 	mrs	r0, CPSR	; read current program status register
 ffff2cf8:	e3c0001f 	bic	r0, r0, #31	; load System (ARMv4+) R0-R14, CPSR, PC as MASK
 ffff2cfc:	e3800013 	orr	r0, r0, #19	; set SVC mode (supervisor) R0-R12, R13_svc R14_svc CPSR, SPSR_IRQ, PC
 ffff2d00:	e38000c0 	orr	r0, r0, #192	; 0xc0e: enable FIQ + IRQ interrupts
 ffff2d04:	e3c00c02 	bic	r0, r0, #512	; set little endianess
-ffff2d08:	e121f000 	msr	CPSR_c, r0	; write to program status regsiter
+ffff2d08:	e121f000 	msr	CPSR_c, r0	; write to current program status register
 
 	;; Disable MMU, I and D cache and program flow prediction
 ffff2d0c:	ee110f10 	mrc	15, 0, r0, cr1, cr0, {0}; read CR (Control Register) from CoProcessor
 ffff2d10:	e3c00005 	bic	r0, r0, #5	; disable MMU and data caching
 ffff2d14:	e3c00b06 	bic	r0, r0, #6144	; 0x1800: disable program flow prediction and instruction caching
-ffff2d18:	ee010f10 	mcr	15, 0, r0, cr1, cr0, {0}; write to CoProcessor CR
+ffff2d18:	ee010f10 	mcr	15, 0, r0, cr1, cr0, {0}; write to CoProcessor control register
 
 	;; Disable watchdog
-ffff2d1c:	e59f10c8 	ldr	r1, [pc, #200]	; 0xffff2dec =0x01c20cb8 load WDT_MODE (watchdog timer) address
-ffff2d20:	e5912000 	ldr	r2, [r1]	; load WDT_MODE value
-ffff2d24:	e3c22001 	bic	r2, r2, #1	; disable watchdog reset
-ffff2d28:	e5812000 	str	r2, [r1]	; store WDT_MODE register
+ffff2d1c:	e59f10c8 	ldr	r1, [pc, #200]	; 0xffff2dec =0x01c20cb8 load WDOG_MODE_REG address
+ffff2d20:	e5912000 	ldr	r2, [r1]	; load WDOG_MODE_REG value
+ffff2d24:	e3c22001 	bic	r2, r2, #1	; disable watchdog reset WDOG_EN = 0
+ffff2d28:	e5812000 	str	r2, [r1]	; store WDOG_MODE_REG register
 
 	;; Configure APB1 and AHB1 clocks, APB1 clock is /4
 ffff2d2c:	e59f10bc 	ldr	r1, [pc, #188]	; 0xffff2df0 =0x01c20000 load CCU base address
 ffff2d30:	e5912054 	ldr	r2, [r1, #84]	; load AHB1_APB1_CFG_REG
-ffff2d34:	e3a03e33 	mov	r3, #816	; 0x330: APB1_CLK_RATIO = 0x11, AHB1_PRE_DIV = 0x11, AHB1_CLK_DIV_RATIO = 0x11 MASK
+ffff2d34:	e3a03e33 	mov	r3, #816	; 0x330: APB1_CLK_RATIO = 0x11, AHB1_PRE_DIV = 0x11, AHB1_CLK_DIV_RATIO = 0x11 (mask)
 ffff2d38:	e1c22003 	bic	r2, r2, r3	;        APB1_CLK_RATIO = 0x00, AHB1_PRE_DIV = 0x00, AHB1_CLK_DIV_RATIO = 0x00
 ffff2d3c:	e3a03c01 	mov	r3, #256	; 0x100: APB1_CLK_RATIO = 0x10 (/4)
 ffff2d40:	e1822003 	orr	r2, r2, r3
@@ -3148,7 +3148,8 @@ ffff2d74:	e58122c0 	str	r2, [r1, #704]	; store BUS_SOFT_RST_REG0
 	;; Setup stack pointer to end of SRAM A1 (16KB)
 ffff2d78:	e59fd074 	ldr	sp, [pc, #116]	; 0xffff2df4 =0x00003ffc setup stack pointer to end of SRAM A1 (16KB)
 
-ffff2d7c:	e59f3074 	ldr	r3, [pc, #116]	; 0xffff2df8 =0x01f01da0 (PRIVATE0) standby flag register?
+	;; Check if resuming from standby mode
+ffff2d7c:	e59f3074 	ldr	r3, [pc, #116]	; 0xffff2df8 =0x01f01da0 standby flag register?
 ffff2d80:	e5932000 	ldr	r2, [r3]
 ffff2d84:	e30f1fff 	movw	r1, #65535	; 0xffff
 ffff2d88:	e0010002 	and	r0, r1, r2
@@ -3166,12 +3167,12 @@ ffff2da0:	e5812000 	str	r2, [r1]
 	;; Is it related to SRAM C being connected to the Video Engine?
 ffff2da4:	e59f1050 	ldr	r1, [pc, #80]	; 0xffff2dfc =0x01c20064 load BUS_CLK_GATING_REG1
 ffff2da8:	e5912000 	ldr	r2, [r1]
-ffff2dac:	e3a03001 	mov	r3, #1 		; VE_GATING = 0x1
+ffff2dac:	e3a03001 	mov	r3, #1 		; VE_GATING = 1
 ffff2db0:	e1822003 	orr	r2, r2, r3
 ffff2db4:	e5812000 	str	r2, [r1] 	; store BUS_CLK_GATING_REG1
 ffff2db8:	e59f1040 	ldr	r1, [pc, #64]	; 0xffff2e00 =0x01c202c4 load BUS_SOFT_RST_REG1
 ffff2dbc:	e5912000 	ldr	r2, [r1]
-ffff2dc0:	e3a03001 	mov	r3, #1 		; VE_RST = 0x1
+ffff2dc0:	e3a03001 	mov	r3, #1 		; VE_RST = 1
 ffff2dc4:	e1822003 	orr	r2, r2, r3
 ffff2dc8:	e5812000 	str	r2, [r1]  	; store BUS_SOFT_RST_REG1
 ffff2dcc:	e3a00e7d 	mov	r0, #2000	; 0x7d0
@@ -3193,7 +3194,7 @@ ffff2df0:	01c20000				; CCU_BASE
 ffff2df4:	00003ffc
 ffff2df8:	01f01da0				; standby flag register?
 ffff2dfc:	01c20064				; BUS_CLK_GATING_REG1
-ffff2e00:	01c202c4
+ffff2e00:	01c202c4				; BUS_SOFT_RST_REG1
 ffff2e04:	0000dffc
 
 ;;;*****************************************************************************
@@ -3214,7 +3215,7 @@ ffff2e2c:	e320f000 	nop	{0}
 ffff2e30:	eafffffe 	b	0xffff2e30	; loop forever
 ;;; *****************************************************************************
 	;; Boot sequence check
-	;; Check first uboot button, it does not like it is accessible on any of the V3s pins (please let me know!)
+	;; Check first uboot button, it does not look like it is accessible on any of the V3s pins (please let me know!)
 boot:
 ffff2e34:	eb000cce 	bl	check_uboot	; check if uboot button is pressed, return value in r0
 ffff2e38:	e1a04000 	mov	r4, r0		; r4 = check_uboot();
@@ -3253,7 +3254,7 @@ ffff2e9c:	ea000013 	b	.boot_spl
 .try_boot_SPINAND:
 ffff2ea0:	e3a00002 	mov	r0, #2
 ffff2ea4:	ebffffd7 	bl	0xffff2e08
-ffff2ea8:	eb000c2b 	bl	0xffff5f5c	; load SPL from SPI NAND-flash
+ffff2ea8:	eb000c2b 	bl	load_boot0_from_spinand; load SPL from SPI NAND-flash
 ffff2eac:	e1a04000 	mov	r4, r0		; r4 = load_from_spinand();
 ffff2eb0:	e3540000 	cmp	r4, #0		; see if load_from_spinand returned 0
 ffff2eb4:	1a000000 	bne	.try_boot_from_SPINOR	; if load_from_spinand returned 0 try to boot from SPI NOR-flash
@@ -3262,7 +3263,7 @@ ffff2eb8:	ea00000c 	b	.boot_spl	; else skip to .boot_spl
 .try_boot_SPINOR:
 ffff2ebc:	e3a00003 	mov	r0, #3
 ffff2ec0:	ebffffd0 	bl	0xffff2e08
-ffff2ec4:	eb0000d7 	bl	0xffff3228	; load SPL from SPI NOR-flash
+ffff2ec4:	eb0000d7 	bl	load_boot0_from_spinor; load SPL from SPI NOR-flash
 ffff2ec8:	e1a04000 	mov	r4, r0		; r4 = load_from_spinor();
 ffff2ecc:	e3540000 	cmp	r4, #0		; see if load_from_spinor returned 0
 ffff2ed0:	1a000000 	bne	.none_found	; if load_from_spinor returned 0 boot from FEL mode (via .none_found)
@@ -3342,6 +3343,7 @@ ffff2fa0:	e8bd8070 	pop	{r4, r5, r6, pc}
 
 ffff2fa4:	e3e00000 	mvn	r0, #0
 ffff2fa8:	eafffffc 	b	0xffff2fa0
+
 ffff2fac:	e3520001 	cmp	r2, #1
 ffff2fb0:	1a000009 	bne	0xffff2fdc
 
@@ -3459,6 +3461,7 @@ ffff3108:	3affffbd 	bcc	0xffff3004
 ffff310c:	eb0009fd 	bl	0xffff5908
 ffff3110:	e3e00000 	mvn	r0, #0
 ffff3114:	eafffff3 	b	0xffff30e8
+;;;*****************************************************************************
 
 ffff3118:	e92d4ff0 	push	{r4, r5, r6, r7, r8, r9, sl, fp, lr}
 ffff311c:	e24dd024 	sub	sp, sp, #36	; 0x24
@@ -3545,7 +3548,9 @@ ffff3218:	3affffc4 	bcc	0xffff3130
 ffff321c:	eb0009b9 	bl	0xffff5908
 ffff3220:	e3e00000 	mvn	r0, #0
 ffff3224:	eafffff6 	b	0xffff3204
+;;;*****************************************************************************
 
+load_boot0_from_spinor:
 ffff3228:	e92d4010 	push	{r4, lr}
 ffff322c:	ebffffb9 	bl	0xffff3118
 
@@ -3643,13 +3648,13 @@ ffff3328:	e3a0a000 	mov	sl, #0
 ffff332c:	e3560000 	cmp	r6, #0
 ffff3330:	1a000001 	bne	0xffff333c
 
-ffff3334:	e3a0a010 	mov	sl, #16
+ffff3334:	e3a0a010 	mov	sl, #16 	; try loading from offset 8KB
 ffff3338:	ea000006 	b	0xffff3358
 
 ffff333c:	e3560001 	cmp	r6, #1
 ffff3340:	1a000001 	bne	0xffff334c
 
-ffff3344:	e300a100 	movw	sl, #256	; 0x100
+ffff3344:	e300a100 	movw	sl, #256 	; try loading from offset 128KB
 ffff3348:	ea000002 	b	0xffff3358
 
 ffff334c:	e3e09000 	mvn	r9, #0
@@ -3785,7 +3790,7 @@ ffff34e8:	e3e04000 	mvn	r4, #0
 ffff34ec:	ea00000c 	b	0xffff3524
 
 ffff34f0:	e28d2018 	add	r2, sp, #24
-ffff34f4:	e3a01000 	mov	r1, #0
+ffff34f4:	e3a01000 	mov	r1, #0 		; try booting from offset 8KB
 ffff34f8:	e1a00005 	mov	r0, r5
 ffff34fc:	ebffff82 	bl	0xffff330c
 
@@ -3794,7 +3799,7 @@ ffff3504:	e3540000 	cmp	r4, #0
 ffff3508:	0a000004 	beq	0xffff3520
 
 ffff350c:	e28d2018 	add	r2, sp, #24
-ffff3510:	e3a01001 	mov	r1, #1
+ffff3510:	e3a01001 	mov	r1, #1 		; try booting from offset 128KB
 ffff3514:	e1a00005 	mov	r0, r5
 ffff3518:	ebffff7b 	bl	0xffff330c
 ffff351c:	e1a04000 	mov	r4, r0
@@ -6849,7 +6854,9 @@ ffff5f4c:	01c02000					; DMA_BASE
 ffff5f50:	01c68300					; SPI_RXD
 ffff5f54:	ffff622c
 ffff5f58:	01c68200					; SPI_TXD
+;;;*****************************************************************************
 
+load_boot0_from_spinand:
 ffff5f5c:	e92d41f0 	push	{r4, r5, r6, r7, r8, lr}
 ffff5f60:	ebfffe44 	bl	0xffff5878
 ffff5f64:	e3a07000 	mov	r7, #0
@@ -6915,6 +6922,7 @@ ffff6018:	3affffd3 	bcc	0xffff5f6c
 ffff601c:	ebfffe39 	bl	0xffff5908
 ffff6020:	e3e00000 	mvn	r0, #0
 ffff6024:	eafffff7 	b	0xffff6008
+;;;*****************************************************************************
 
 ffff6028:	4e4f4765	.ascii	"eGON"
 ffff602c:	3054422e	.ascii	".BT0"
