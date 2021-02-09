@@ -12,7 +12,7 @@ ffff0020:	ea000013 	b	fel_setup     ; FEL
 unimplemented:
 ffff0024:	eafffffe 	b	unimplemented ; loop forever
 
-	;;  Entry point, clear all register and jump to BROM
+	;;  Entry point, clear all registers and jump to BROM
 reset:
 ffff0028:	e3a00001 	mov	r0, #1
 ffff002c:	e3a01000 	mov	r1, #0
@@ -2985,6 +2985,12 @@ ffff2a58:	e8bd4001 	pop	{r0, lr}
 ffff2a5c:	e1a0f00e 	mov	pc, lr
 	...
 
+;;;*****************************************************************************
+;;;
+;;; Boot ROM
+;;;
+;;;*****************************************************************************
+
 BROM:
 
 	;; BROM header
@@ -2997,51 +3003,27 @@ ffff2c14:	30303131	.ascii	"1100"		; eGon version (1.1.00)
 ffff2c18:	31383631	.ascii	"1681"		; platform information (V3s)
 ffff2c1c:	00000000	.word	0
 
-;;;*****************************************************************************
-;;;
-;;;                  About the jump_instruction field in Boot_file_head
-;;;
-;;; The jump_instruction field stores a branch instruction: ( B  after_header ),
-;;; this jumps after the transfer instruction is executed, the program will jump
-;;; to the first instruction after the header.
-;;;
-;;;  The encoding of the B instruction in ARM assembler is as follows:
-;;;          +--------+---------+------------------------------+
-;;;          | 31--28 | 27--24  |            23--0             |
-;;;          +--------+---------+------------------------------+
-;;;          |  cond  | 1 0 1 0 |        signed_immed_24       |
-;;;          +--------+---------+------------------------------+
-;;;
-;;;  "ARM Architecture Reference Manual" explains this instruction as follows:
-;;;  Syntax :
-;;;  B{<cond>}  <target_address>
-;;;    <cond>    Is the condition under which the instruction is executed. If the
-;;;              <cond> is ommitted, the AL(always,its code is 0b1110 )is used.
-;;;    <target_address>
-;;;              Specified the address to branch to. The branch target address is
-;;;              calculated by:
-;;;              1.  Sign-extending the 24-bit signed (two's complement) immediate
-;;;                  to 32 bits.
-;;;              2.  Shifting the result left two bits.
-;;;              3.  Adding to the contents of the PC, which contains the address
-;;;                  of the branch instruction plus 8.
-;;;
-;;;*****************************************************************************
-
 	;; BROM entry point
-	;; Unknown sequence of pulsing, is this related to multi-CPU?
+
+	;; Unknown sequence of pulsing
+	;;
+	;; According to the H6 User Manual (https://linux-sunxi.org/images/4/46/Allwinner_H6_V200_User_Manual_V1.1.pdf)
+	;; which has a register with similar offset (0xa4) in its system configuration block,
+	;; it is BROM_OUTPUT_REG, and bit 0 is BROM_OUTPUT_ENABLE, bit 1 is BROM_OUTPUT_VALUE
+	;; This seems to generate a HI/LO/HI/LO/HI sequence on this pin...
+	;; ... Except that it is an unknown pin on the V3s
 start:
 ffff2c20:	e59f11bc 	ldr	r1, [pc, #444]	; 0xffff2de4 =0x01c000a4
 ffff2c24:	e5912000 	ldr	r2, [r1]
 ffff2c28:	e3a03001 	mov	r3, #1
 ffff2c2c:	e1822003 	orr	r2, r2, r3
-ffff2c30:	e5812000 	str	r2, [r1] 	; set bit 1 of undocumented register
+ffff2c30:	e5812000 	str	r2, [r1] 	; set bit 0 of undocumented register
 
 ffff2c34:	e59f11a8 	ldr	r1, [pc, #424]	; 0xffff2de4 =0x01c000a4
 ffff2c38:	e5912000 	ldr	r2, [r1]
 ffff2c3c:	e3a03002 	mov	r3, #2
 ffff2c40:	e1822003 	orr	r2, r2, r3
-ffff2c44:	e5812000 	str	r2, [r1]	; set bit 2 of undocumented register
+ffff2c44:	e5812000 	str	r2, [r1]	; set bit 1 of undocumented register
 
 ffff2c48:	e3a00014 	mov	r0, #20		; delay loop 20 times
 
@@ -3051,7 +3033,7 @@ ffff2c50:	1afffffd 	bne	.delay0
 
 ffff2c54:	e5912000 	ldr	r2, [r1]
 ffff2c58:	e1c22003 	bic	r2, r2, r3
-ffff2c5c:	e5812000 	str	r2, [r1]	; clear bit 2 of undocumented register
+ffff2c5c:	e5812000 	str	r2, [r1]	; clear bit 1 of undocumented register
 
 ffff2c60:	e3a0001e 	mov	r0, #30		; delay loop 30 times
 
@@ -3061,7 +3043,7 @@ ffff2c68:	1afffffd 	bne	.delay1
 
 ffff2c6c:	e5912000 	ldr	r2, [r1]
 ffff2c70:	e1822003 	orr	r2, r2, r3
-ffff2c74:	e5812000 	str	r2, [r1]	; set bit 2 of undocumented register
+ffff2c74:	e5812000 	str	r2, [r1]	; set bit 1 of undocumented register
 
 ffff2c78:	e3a00014 	mov	r0, #20 	; delay loop 20 times
 
@@ -3071,7 +3053,7 @@ ffff2c80:	1afffffd 	bne	.delay2
 
 ffff2c84:	e5912000 	ldr	r2, [r1]
 ffff2c88:	e1c22003 	bic	r2, r2, r3
-ffff2c8c:	e5812000 	str	r2, [r1]	; clear bit 2 of undocumented register
+ffff2c8c:	e5812000 	str	r2, [r1]	; clear bit 1 of undocumented register
 
 ffff2c90:	e3a0001e 	mov	r0, #30		; delay loop 30 times
 
@@ -3081,7 +3063,7 @@ ffff2c98:	1afffffd 	bne	.delay3
 
 ffff2c9c:	e5912000 	ldr	r2, [r1]
 ffff2ca0:	e1822003 	orr	r2, r2, r3
-ffff2ca4:	e5812000 	str	r2, [r1]	; set bit 2 of undocumented register
+ffff2ca4:	e5812000 	str	r2, [r1]	; set bit 1 of undocumented register
 
 ffff2ca8:	e3a00014 	mov	r0, #20		; delay loop 20 times
 
@@ -3093,7 +3075,7 @@ ffff2cb4:	e59f1128 	ldr	r1, [pc, #296]	; 0xffff2de4 =0x01c000a4
 ffff2cb8:	e5912000 	ldr	r2, [r1]
 ffff2cbc:	e3a03001 	mov	r3, #1
 ffff2cc0:	e1c22003 	bic	r2, r2, r3
-ffff2cc4:	e5812000 	str	r2, [r1]	; clear bit 1 of undocumented register
+ffff2cc4:	e5812000 	str	r2, [r1]	; clear bit 0 of undocumented register
 
 ffff2cc8:	e3a00050 	mov	r0, #80		; delay loop 80 times
 
@@ -3104,7 +3086,7 @@ ffff2cd0:	1afffffd 	bne	.delay5
 ffff2cd4:	ea000001 	b	.check_multi_cpu
 
 	;; Start a CPU other than #0, which is unlikely as the V3s only features a single core
-.start_non_zero:
+.start_other_cpu:
 ffff2cd8:	e59f0108 	ldr	r0, [pc, #264]	; 0xffff2de8 =0x01f01da4 (PRIVATE0) cpu0+ (or cpu0 hotplug) entry address register?
 ffff2cdc:	e590f000 	ldr	pc, [r0]
 
@@ -3114,11 +3096,11 @@ ffff2cdc:	e590f000 	ldr	pc, [r0]
 ffff2ce0:	ee100fb0 	mrc	15, 0, r0, cr0, cr0, {5}; read the MPIDR (Multiprocessor ID Register) from system CoProcessor
 ffff2ce4:	e2000003 	and	r0, r0, #3
 ffff2ce8:	e3500000 	cmp	r0, #0	        ; 2 LSB bits are processor #
-ffff2cec:	1afffff9 	bne	.start_non_zero ; start non-zero core
-ffff2cf0:	eaffffff 	b	.start_zero	; start core 0
+ffff2cec:	1afffff9 	bne	.start_other_cpu; start non-zero CPU
+ffff2cf0:	eaffffff 	b	.start_cpu0	; start CPU 0
 
-	;; Start Core #0
-.start_zero:
+	;; Start CPU #0
+.start_cpu:
 ffff2cf4:	e10f0000 	mrs	r0, CPSR	; read current program status register
 ffff2cf8:	e3c0001f 	bic	r0, r0, #31	; load System (ARMv4+) R0-R14, CPSR, PC as MASK
 ffff2cfc:	e3800013 	orr	r0, r0, #19	; set SVC mode (supervisor) R0-R12, R13_svc R14_svc CPSR, SPSR_IRQ, PC
@@ -3163,7 +3145,7 @@ ffff2d6c:	e3a03040 	mov	r3, #64		; DMA_RST = 1
 ffff2d70:	e1822003 	orr	r2, r2, r3
 ffff2d74:	e58122c0 	str	r2, [r1, #704]	; store BUS_SOFT_RST_REG0
 
-	;; Setup (IRQ?) stack pointer to end of SRAM A1 (16KB)
+	;; Setup stack pointer to end of SRAM A1 (16KB)
 ffff2d78:	e59fd074 	ldr	sp, [pc, #116]	; 0xffff2df4 =0x00003ffc setup stack pointer to end of SRAM A1 (16KB)
 
 ffff2d7c:	e59f3074 	ldr	r3, [pc, #116]	; 0xffff2df8 =0x01f01da0 (PRIVATE0) standby flag register?
@@ -3174,9 +3156,8 @@ ffff2d8c:	e30e1fe8 	movw	r1, #61416	; 0xefe8
 ffff2d90:	e1500001 	cmp	r0, r1
 ffff2d94:	0a000058 	beq	resume_from_standby
 
-	;; Clear undocument register in System Control block
-	;; Is this to enable SRAM A1 and C, and CPU I + D + L2 caches?
-	;; Or is this to exit from initial IRQ context?
+	;; Clear undocumented register in System Control block
+	;; Is this to enable SRAM C for CPU/DMA access?
 ffff2d98:	e3a01507 	mov	r1, #29360128	; 0x1c00000: undocumented register in System Control block
 ffff2d9c:	e3a02000 	mov	r2, #0
 ffff2da0:	e5812000 	str	r2, [r1]
@@ -3187,7 +3168,7 @@ ffff2da4:	e59f1050 	ldr	r1, [pc, #80]	; 0xffff2dfc =0x01c20064 load BUS_CLK_GATI
 ffff2da8:	e5912000 	ldr	r2, [r1]
 ffff2dac:	e3a03001 	mov	r3, #1 		; VE_GATING = 0x1
 ffff2db0:	e1822003 	orr	r2, r2, r3
-ffff2db4:	e5812000 	str	r2, [r1] 	; store BUS_CLK_GTING_REG1
+ffff2db4:	e5812000 	str	r2, [r1] 	; store BUS_CLK_GATING_REG1
 ffff2db8:	e59f1040 	ldr	r1, [pc, #64]	; 0xffff2e00 =0x01c202c4 load BUS_SOFT_RST_REG1
 ffff2dbc:	e5912000 	ldr	r2, [r1]
 ffff2dc0:	e3a03001 	mov	r3, #1 		; VE_RST = 0x1
@@ -3199,7 +3180,7 @@ ffff2dcc:	e3a00e7d 	mov	r0, #2000	; 0x7d0
 ffff2dd0:	e2500001 	subs	r0, r0, #1
 ffff2dd4:	1afffffd 	bne	.delay_6
 
-	;; Setup (application?) stack pointer to 4k below end of SRAM C (44KB)
+	;; Setup stack pointer to 4k below end of SRAM C (44KB)
 ffff2dd8:	e59fd024 	ldr	sp, [pc, #36]	; 0xffff2e04 = 0x0000dffc setup stack pointer to 4k below end of SRAM C (44KB)
 ffff2ddc:	eb000014 	bl	boot		; jump to boot
 ffff2de0:	eafffffe 	b	0xffff2de0	; loop forever
@@ -3215,7 +3196,8 @@ ffff2dfc:	01c20064				; BUS_CLK_GATING_REG1
 ffff2e00:	01c202c4
 ffff2e04:	0000dffc
 
-	;; Fetch the content of 0x2000 + r0 * 256 into r2, for unknow purpose
+;;;*****************************************************************************
+	;; Fetch the content of 0x20000 + r0 * 256 into r2, for unknow purpose
 ffff2e08:	e3a02000 	mov	r2, #0
 ffff2e0c:	e3a01000 	mov	r1, #0
 ffff2e10:	e3a03802 	mov	r3, #131072	; 0x20000
@@ -3223,13 +3205,14 @@ ffff2e14:	e0831400 	add	r1, r3, r0, lsl #8
 ffff2e18:	e5912000 	ldr	r2, [r1]
 ffff2e1c:	e12fff1e 	bx	lr
 
+;;;*****************************************************************************
 jump_spl:
 ffff2e20:	e1a04000 	mov	r4, r0
 ffff2e24:	e1a00004 	mov	r0, r4
 ffff2e28:	eb000ce6 	bl	jump_to
 ffff2e2c:	e320f000 	nop	{0}
 ffff2e30:	eafffffe 	b	0xffff2e30	; loop forever
-
+;;; *****************************************************************************
 	;; Boot sequence check
 	;; Check first uboot button, it does not like it is accessible on any of the V3s pins (please let me know!)
 boot:
@@ -3243,46 +3226,47 @@ ffff2e44:	ea000026 	b	.boot_fel	; else boot FEL mode
 ffff2e48:	e3a00000 	mov	r0, #0
 ffff2e4c:	ebffffed 	bl	0xffff2e08
 ffff2e50:	e3a00000 	mov	r0, #0		; r0 = 0x0; (which card_no to boot, 0 = mmc0)
-ffff2e54:	eb000190 	bl	load_boot1_from_mmc ; load SPL from mmc0
+ffff2e54:	eb000190 	bl	load_boot0_from_mmc ; load SPL from mmc0
 ffff2e58:	e1a04000 	mov	r4, r0		; r4 = load_from_mmc();
 ffff2e5c:	e3540000 	cmp	r4, #0		; see if load_from_mmc returned 0
-ffff2e60:	1a000000 	bne	.try_boot_NAND	; if load_from_mmc returned 0 try to boot from NAND-flash
+ffff2e60:	1a000000 	bne	.try_boot_eMMC	; if load_from_mmc returned 0 try to boot from eMMc on MMC2
 ffff2e64:	ea000021 	b	.boot_spl	; else skip to .boot_spl
 
-.try_boot_NAND:
+.try_boot_eMMC:
 ffff2e68:	e3a00001 	mov	r0, #1
 ffff2e6c:	ebffffe5 	bl	0xffff2e08
-ffff2e70:	e3a00002 	mov	r0, #2
-ffff2e74:	eb0001b0 	bl	0xffff353c	; load SPL from NAND
-ffff2e78:	e1a04000 	mov	r4, r0		; r4 = load_from_nand();
-ffff2e7c:	e3540000 	cmp	r4, #0		; see if load_from_nand returned 0
-ffff2e80:	1a000000 	bne	.try_boot_MMC2	; if load_from_nand returned 0 try to boot from MMC2
+ffff2e70:	e3a00002 	mov	r0, #2		; r0 = 0x2; (which card_no to boot, 2 = mmc2)
+ffff2e74:	eb0001b0 	bl	0xffff353c	; load SPL from eMMC
+ffff2e78:	e1a04000 	mov	r4, r0		; r4 = load_from_emmc();
+ffff2e7c:	e3540000 	cmp	r4, #0		; see if load_from_emmc returned 0
+ffff2e80:	1a000000 	bne	.try_boot_MMC2	; if load_from_emmc returned 0 try to boot from MMC2
 ffff2e84:	ea000019 	b	.boot_spl	; else skip to .boot_spl
 
 .try_boot_MMC2:
 ffff2e88:	e3a00002 	mov	r0, #2		; r0 = 0x2; (which card_no to boot, 2 = mmc2)
-ffff2e8c:	eb000182 	bl	load_boot1_from_mmc ; load SPL from mmc2
+ffff2e8c:	eb000182 	bl	load_boot0_from_mmc ; load SPL from mmc2
 ffff2e90:	e1a04000 	mov	r4, r0		; r4 = load_from_mmc();
 ffff2e94:	e3540000 	cmp	r4, #0		; see if load_from_mmc returned 0
-ffff2e98:	1a000000 	bne	.try_boot_SPINOR; if load_from_mmc returned 0 try to boot from SPI NOR-flash
+ffff2e98:	1a000000 	bne	.try_boot_SPINAND; if load_from_mmc returned 0 try to boot from SPI NAND-flash
 ffff2e9c:	ea000013 	b	.boot_spl
 
-.try_boot_SPINOR:
+.try_boot_SPINAND:
 ffff2ea0:	e3a00002 	mov	r0, #2
 ffff2ea4:	ebffffd7 	bl	0xffff2e08
-ffff2ea8:	eb000c2b 	bl	0xffff5f5c	; load SPL from SPI NOR-flash
-ffff2eac:	e1a04000 	mov	r4, r0		; r4 = load_from_spinor();
-ffff2eb0:	e3540000 	cmp	r4, #0		; see if load_from_spinor returned 0
-ffff2eb4:	1a000000 	bne	0xffff2ebc	; if load_from_spinor returned 0 boot from FEL mode (via .none_found)
+ffff2ea8:	eb000c2b 	bl	0xffff5f5c	; load SPL from SPI NAND-flash
+ffff2eac:	e1a04000 	mov	r4, r0		; r4 = load_from_spinand();
+ffff2eb0:	e3540000 	cmp	r4, #0		; see if load_from_spinand returned 0
+ffff2eb4:	1a000000 	bne	.try_boot_from_SPINOR	; if load_from_spinand returned 0 try to boot from SPI NOR-flash
 ffff2eb8:	ea00000c 	b	.boot_spl	; else skip to .boot_spl
 
+.try_boot_SPINOR:
 ffff2ebc:	e3a00003 	mov	r0, #3
 ffff2ec0:	ebffffd0 	bl	0xffff2e08
-ffff2ec4:	eb0000d7 	bl	0xffff3228
-ffff2ec8:	e1a04000 	mov	r4, r0
-ffff2ecc:	e3540000 	cmp	r4, #0
-ffff2ed0:	1a000000 	bne	.none_found
-ffff2ed4:	ea000005 	b	.boot_spl
+ffff2ec4:	eb0000d7 	bl	0xffff3228	; load SPL from SPI NOR-flash
+ffff2ec8:	e1a04000 	mov	r4, r0		; r4 = load_from_spinor();
+ffff2ecc:	e3540000 	cmp	r4, #0		; see if load_from_spinor returned 0
+ffff2ed0:	1a000000 	bne	.none_found	; if load_from_spinor returned 0 boot from FEL mode (via .none_found)
+ffff2ed4:	ea000005 	b	.boot_spl	; else skip to .boot_spl
 
 .none_found:
 ffff2ed8:	e3a00004 	mov	r0, #4
@@ -3291,7 +3275,7 @@ ffff2edc:	ebffffc9 	bl	0xffff2e08
 ffff2ee0:	e320f000 	nop	{0}
 
 .boot_fel:
-ffff2ee4:	e59f006c 	ldr	r0, [pc, #108]	; 0xffff2f58 =0x0xffff0020 load interrupt vector 'fel_setup' into r0
+ffff2ee4:	e59f006c 	ldr	r0, [pc, #108]	; 0xffff2f58 =0xffff0020 load interrupt vector 'fel_setup' into r0
 ffff2ee8:	eb000cb6 	bl	jump_to		; execute 'fel_setup' (via jump_to)
 ffff2eec:	e320f000 	nop	{0}
 
@@ -3772,7 +3756,7 @@ ffff3494:	e1a00009 	mov	r0, r9
 ffff3498:	eaffffad 	b	0xffff3354
 
 ;;;*****************************************************************************
-load_boot1_from_mmc:					; r0 = card_no
+load_boot0_from_mmc:					; r0 = card_no
 ffff349c:	e92d4030 	push	{r4, r5, lr}
 ffff34a0:	e24dd064 	sub	sp, sp, #100	; allocate local variables
 
@@ -3824,6 +3808,7 @@ ffff3530:	e1a00004 	mov	r0, r4
 ffff3534:	e28dd064 	add	sp, sp, #100	; 0x64
 ffff3538:	e8bd8030 	pop	{r4, r5, pc}
 
+;;; *****************************************************************************
 ffff353c:	e92d40f0 	push	{r4, r5, r6, r7, lr}
 ffff3540:	e24dd064 	sub	sp, sp, #100	; 0x64
 ffff3544:	e1a06000 	mov	r6, r0
@@ -3919,6 +3904,7 @@ ffff3668:	eb00086a 	bl	0xffff5818
 ffff366c:	e1a00007 	mov	r0, r7
 ffff3670:	e28dd064 	add	sp, sp, #100	; 0x64
 ffff3674:	e8bd80f0 	pop	{r4, r5, r6, r7, pc}
+;;; *****************************************************************************
 
 	;; Global Offset Table
 ffff3678:	005b8d80
@@ -3926,6 +3912,8 @@ ffff367c:	4e4f4765	.ascii	"eGON"
 ffff3680:	3054422e	.ascii	".BT0"
 ffff3684:	00000000
 
+;;;*****************************************************************************
+reset_counter:
 ffff3688:	e3a00001 	mov	r0, #1
 ffff368c:	e59f1e64 	ldr	r1, [pc, #3684]	; 0xffff44f8 =0x01c20cd0 CNT64_TEST_REG
 ffff3690:	e5810000 	str	r0, [r1]
@@ -3972,6 +3960,7 @@ ffff371c:	e056000a 	subs	r0, r6, sl
 ffff3720:	e0d7000b 	sbcs	r0, r7, fp
 ffff3724:	3afffff9 	bcc	0xffff3710
 ffff3728:	e8bd8ff0 	pop	{r4, r5, r6, r7, r8, r9, sl, fp, pc}
+;;; *****************************************************************************
 
 ffff372c:	e92d4030 	push	{r4, r5, lr}
 ffff3730:	e1a04000 	mov	r4, r0
@@ -7036,7 +7025,7 @@ ffff6164:	e2400001 	sub	r0, r0, #1
 ffff6168:	e3500000 	cmp	r0, #0
 ffff616c:	cafffffc 	bgt	0xffff6164
 ffff6170:	e12fff1e 	bx	lr
-
+;;; ;*****************************************************************************
 check_uboot:
 ffff6174:	e92d4070 	push	{r4, r5, r6, lr}
 ffff6178:	e3a05000 	mov	r5, #0
@@ -7064,9 +7053,11 @@ ffff61bc:	e3a00000 	mov	r0, #0
 ffff61c0:	eafffffc 	b	0xffff61b8
 
 ffff61c4:	00004770 	andeq	r4, r0, r0, ror r7
+;;;*****************************************************************************
 
 jump_to:
 ffff61c8:	e1a0f000 	mov	pc, r0
+;;;*****************************************************************************
 
 ffff61cc:	00000800
 ffff61d0:	00000400
