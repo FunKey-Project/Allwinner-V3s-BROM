@@ -3248,25 +3248,25 @@ ffff2e88:	e3a00002 	mov	r0, #2		; r0 = 0x2; (which card_no to boot, 2 = mmc2)
 ffff2e8c:	eb000182 	bl	load_boot0_from_mmc ; load SPL from mmc2
 ffff2e90:	e1a04000 	mov	r4, r0		; r4 = load_from_mmc();
 ffff2e94:	e3540000 	cmp	r4, #0		; see if load_from_mmc returned 0
-ffff2e98:	1a000000 	bne	.try_boot_SPINAND; if load_from_mmc returned 0 try to boot from SPI NAND-flash
+ffff2e98:	1a000000 	bne	.try_boot_SPINOR; if load_from_mmc returned 0 try to boot from SPI NAND-flash
 ffff2e9c:	ea000013 	b	.boot_spl
 
-.try_boot_SPINAND:
+.try_boot_SPINOR:
 ffff2ea0:	e3a00002 	mov	r0, #2
 ffff2ea4:	ebffffd7 	bl	0xffff2e08
-ffff2ea8:	eb000c2b 	bl	load_boot0_from_spinand; load SPL from SPI NAND-flash
-ffff2eac:	e1a04000 	mov	r4, r0		; r4 = load_from_spinand();
-ffff2eb0:	e3540000 	cmp	r4, #0		; see if load_from_spinand returned 0
-ffff2eb4:	1a000000 	bne	.try_boot_from_SPINOR	; if load_from_spinand returned 0 try to boot from SPI NOR-flash
+ffff2ea8:	eb000c2b 	bl	load_boot0_from_spinor; load SPL from SPI NOR-flash
+ffff2eac:	e1a04000 	mov	r4, r0		; r4 = load_from_spinor();
+ffff2eb0:	e3540000 	cmp	r4, #0		; see if load_from_spinor returned 0
+ffff2eb4:	1a000000 	bne	.try_boot_from_SPINAND; if load_from_spinor returned 0 try to boot from SPI NOR-flash
 ffff2eb8:	ea00000c 	b	.boot_spl	; else skip to .boot_spl
 
-.try_boot_SPINOR:
+.try_boot_SPINAND:
 ffff2ebc:	e3a00003 	mov	r0, #3
 ffff2ec0:	ebffffd0 	bl	0xffff2e08
-ffff2ec4:	eb0000d7 	bl	load_boot0_from_spinor; load SPL from SPI NOR-flash
-ffff2ec8:	e1a04000 	mov	r4, r0		; r4 = load_from_spinor();
-ffff2ecc:	e3540000 	cmp	r4, #0		; see if load_from_spinor returned 0
-ffff2ed0:	1a000000 	bne	.none_found	; if load_from_spinor returned 0 boot from FEL mode (via .none_found)
+ffff2ec4:	eb0000d7 	bl	load_boot0_from_spinand; load SPL from SPI NAND-flash
+ffff2ec8:	e1a04000 	mov	r4, r0		; r4 = load_from_spinand();
+ffff2ecc:	e3540000 	cmp	r4, #0		; see if load_from_spinand returned 0
+ffff2ed0:	1a000000 	bne	.none_found	; if load_from_spinand returned 0 boot from FEL mode (via .none_found)
 ffff2ed4:	ea000005 	b	.boot_spl	; else skip to .boot_spl
 
 .none_found:
@@ -3550,7 +3550,7 @@ ffff3220:	e3e00000 	mvn	r0, #0
 ffff3224:	eafffff6 	b	0xffff3204
 ;;;*****************************************************************************
 
-load_boot0_from_spinor:
+load_boot0_from_spinand:
 ffff3228:	e92d4010 	push	{r4, lr}
 ffff322c:	ebffffb9 	bl	0xffff3118
 
@@ -6856,7 +6856,7 @@ ffff5f54:	ffff622c
 ffff5f58:	01c68200					; SPI_TXD
 ;;;*****************************************************************************
 
-load_boot0_from_spinand:
+load_boot0_from_spinor:
 ffff5f5c:	e92d41f0 	push	{r4, r5, r6, r7, r8, lr}
 ffff5f60:	ebfffe44 	bl	0xffff5878
 ffff5f64:	e3a07000 	mov	r7, #0
@@ -6916,6 +6916,7 @@ ffff6008:	e8bd81f0 	pop	{r4, r5, r6, r7, r8, pc}
 ffff600c:	e320f000 	nop	{0}
 
 ffff6010:	e2877001 	add	r7, r7, #1
+
 ffff6014:	e3570002 	cmp	r7, #2
 ffff6018:	3affffd3 	bcc	0xffff5f6c
 
